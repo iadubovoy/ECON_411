@@ -1,161 +1,128 @@
-{
- "cells": [
-  {
-   "cell_type": "code",
-   "execution_count": 1,
-   "id": "f31091fc",
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "import os\n",
-    "import pandas\n",
-    "import numpy as np\n",
-    "import matplotlib.pyplot as plt\n",
-    "\n",
-    "\n",
-    "#plots.py\n",
-    "# . . .\n",
-    "def plot_lines(df, linewidth = 1, figsize = (40,20),secondary_y = None, legend=True, pp = None, save_fig = False):\n",
-    "    \n",
-    "    fig, ax = plt.subplots(figsize = figsize)    \n",
-    "    # If no secondary_y (axis), plot all variables at once\n",
-    "    df.dropna(axis=0, how = \"all\").plot.line(linewidth = linewidth, ax = ax, secondary_y=secondary_y, legend = legend)\n",
-    "    # Turn the text on the x-axis so that it reads vertically\n",
-    "    ax.tick_params(axis='x', rotation=90)\n",
-    "    # Get rid of tick lines perpendicular to the axis for aesthetic\n",
-    "    ax.tick_params('both', length=0, which='both')\n",
-    "    # transform y-axis values from sci notation to integers\n",
-    "    vals = ax.get_yticks()\n",
-    "    ax.set_yticklabels([round(x,2) for x in vals]) \n",
-    "    \n",
-    "    # format image filename \n",
-    "    remove_chars = \"[]:$'\\\\\"\n",
-    "    filename = str(list(df.keys()))\n",
-    "    for char in remove_chars:\n",
-    "        filename = filename.replace(char, \"\")  \n",
-    "    if save_fig:\n",
-    "        try:\n",
-    "            os.mkdir(\"plots\")\n",
-    "        except:\n",
-    "            pass\n",
-    "        plt.savefig(\"plots/\" + filename[:50] + \" line.png\", \n",
-    "                bbox_inches = \"tight\")\n",
-    "    #[:50] + \" line.png\"\n",
-    "    # save image if PdfPages object was passed\n",
-    "    if pp != None: pp.savefig(fig, bbox_inches = \"tight\")\n",
-    "\n",
-    "def plot_scatter(data, s = 75, figsize = (40, 20), save_fig = False, pp = None):\n",
-    "    # Create plot for every unique pair of variables\n",
-    "    df = data.copy()\n",
-    "    for var1 in df:\n",
-    "        for var2 in df:\n",
-    "            if var1 != var2:\n",
-    "                fig, ax = plt.subplots(figsize = figsize)\n",
-    "                # Create list of years from index\n",
-    "                # Year will be represented by color\n",
-    "                if \"Year\" not in df.keys():\n",
-    "                    df[\"Year\"] = [int(str(ind)[:4]) for ind in df.index] \n",
-    "                df.plot.scatter(x = var1, y = var2, s = s, ax = ax, \n",
-    "                                c = \"Year\", cmap = \"viridis\")\n",
-    "                # Turn the text on the x-axis so that it reads vertically\n",
-    "                ax.tick_params(axis='x', rotation=90)\n",
-    "                # Get rid of tick lines perpendicular to the axis for aesthetic\n",
-    "                ax.tick_params('both', length=0, which='both')\n",
-    "                # save image if PdfPages object was passed\n",
-    "                if save_fig:\n",
-    "                    try:\n",
-    "                        os.mkdir(\"plots\")\n",
-    "                    except:\n",
-    "                        pass\n",
-    "                    plt.savefig(\"plots/\" + str(list(df.keys())).replace(\"[\", \"\").replace(\"]\",\"\")[:40] + \" scatter.png\",\n",
-    "                            bbox_inches = \"tight\")\n",
-    "                    if pp != None: pp.savefig(fig, bbox_inches = \"tight\")\n",
-    "\n",
-    "def corr_matrix_heatmap(df, save_fig = False, pp = None):  \n",
-    "    #Create a figure to visualize a corr matrix  \n",
-    "    fig, ax = plt.subplots(figsize=(20,20))  \n",
-    "    # use ax.imshow() to create a heatmap of correlation values  \n",
-    "    # seismic mapping shows negative values as blue and positive values as red  \n",
-    "    im = ax.imshow(df, norm = plt.cm.colors.Normalize(-1,1), cmap = \"seismic\")  \n",
-    "    # create a list of labels, stacking each word in a label by replacing \" \"  \n",
-    "    # with \"\\n\"  \n",
-    "    labels = df.keys()  \n",
-    "    num_vars = len(labels)  \n",
-    "    tick_labels = [lab.replace(\" \", \"\\n\") for lab in labels]  \n",
-    "    # adjust font size according to the number of variables visualized  \n",
-    "    tick_font_size = 120 / num_vars  \n",
-    "    val_font_size = 200 / num_vars  \n",
-    "    plt.rcParams.update({'font.size': tick_font_size}) \n",
-    "    # prepare space for label of each column  \n",
-    "    x_ticks = np.arange(num_vars)  \n",
-    "    # select labels and rotate them 90 degrees so that they are vertical  \n",
-    "    plt.xticks(x_ticks, tick_labels, fontsize = tick_font_size, rotation = 90)  \n",
-    "    # prepare space for label of each row  \n",
-    "    y_ticks = np.arange(len(labels))  \n",
-    "    # select labels  \n",
-    "    plt.yticks(y_ticks, tick_labels, fontsize = tick_font_size)  \n",
-    "    # show values in each tile of the heatmap  \n",
-    "    for i in range(len(labels)):  \n",
-    "        for j in range(len(labels)):  \n",
-    "            text = ax.text(i, j, str(round(df.values[i][j],2)),  \n",
-    "                           fontsize= val_font_size, ha=\"center\",   \n",
-    "                           va=\"center\", color = \"w\")  \n",
-    "    #Create title with Times New Roman Font  \n",
-    "    title_font = {\"fontname\":\"Times New Roman\"}  \n",
-    "    plt.title(\"Correlation\", fontsize = 50, **title_font)  \n",
-    "    #Call scale to show value of colors \n",
-    "    cbar = fig.colorbar(im)\n",
-    "    plt.show()\n",
-    "    if save_fig:\n",
-    "        try:\n",
-    "            os.mkdir(\"plots\")\n",
-    "        except:\n",
-    "            pass\n",
-    "        plt.savefig(\"plots/\" + str(list(df.keys())).replace(\"[\", \"\").replace(\"]\",\"\")[:40] + \" corrMatrix.png\",\n",
-    "            bbox_inches = \"tight\")\n",
-    "\n",
-    "        if pp != None: pp.savefig(fig, bbox_inches=\"tight\")\n",
-    "    plt.close()\n",
-    "\n",
-    "def plot_stacked_lines(df, plot_vars, linewidth = 1, \n",
-    "                       figsize = (40, 20),\n",
-    "                       pp = None, total_var = False,\n",
-    "                      title = False):\n",
-    "    fig, ax = plt.subplots(figsize = figsize)\n",
-    "    # df.plot.area() created a stacked plot\n",
-    "    df[plot_vars].plot.area(stacked = True, linewidth = linewidth,\n",
-    "                            ax = ax)\n",
-    "    if total_var != False:\n",
-    "        df[total_var].plot.line(linewidth = linewidth, ax = ax,\n",
-    "                                c = \"k\",label = total_var, \n",
-    "                                ls = \"--\")\n",
-    "    # place legend in top left corner of plot\n",
-    "    # format legend so that there are two columns of names\n",
-    "    ax.legend(loc = 2, ncol = 2)\n",
-    "    if title != False:\n",
-    "        plt.title(title)"
-   ]
-  }
- ],
- "metadata": {
-  "kernelspec": {
-   "display_name": "Python 3",
-   "language": "python",
-   "name": "python3"
-  },
-  "language_info": {
-   "codemirror_mode": {
-    "name": "ipython",
-    "version": 3
-   },
-   "file_extension": ".py",
-   "mimetype": "text/x-python",
-   "name": "python",
-   "nbconvert_exporter": "python",
-   "pygments_lexer": "ipython3",
-   "version": "3.8.8"
-  }
- },
- "nbformat": 4,
- "nbformat_minor": 5
-}
+#plots.py
+import os
+import pandas
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+#plots.py
+# . . .
+def plot_lines(df, linewidth = 1, figsize = (40,20),secondary_y = None, legend=True, pp = None, save_fig = False):
+    
+    fig, ax = plt.subplots(figsize = figsize)    
+    # If no secondary_y (axis), plot all variables at once
+    df.dropna(axis=0, how = "all").plot.line(linewidth = linewidth, ax = ax, secondary_y=secondary_y, legend = legend)
+    # Turn the text on the x-axis so that it reads vertically
+    ax.tick_params(axis='x', rotation=90)
+    # Get rid of tick lines perpendicular to the axis for aesthetic
+    ax.tick_params('both', length=0, which='both')
+    # transform y-axis values from sci notation to integers
+    vals = ax.get_yticks()
+    ax.set_yticklabels([round(x,2) for x in vals]) 
+    
+    # format image filename 
+    remove_chars = "[]:$'\\"
+    filename = str(list(df.keys()))
+    for char in remove_chars:
+        filename = filename.replace(char, "")  
+    if save_fig:
+        try:
+            os.mkdir("plots")
+        except:
+            pass
+        plt.savefig("plots/" + filename[:50] + " line.png", 
+                bbox_inches = "tight")
+    #[:50] + " line.png"
+    # save image if PdfPages object was passed
+    if pp != None: pp.savefig(fig, bbox_inches = "tight")
+
+def plot_scatter(data, s = 75, figsize = (40, 20), save_fig = False, pp = None):
+    # Create plot for every unique pair of variables
+    df = data.copy()
+    for var1 in df:
+        for var2 in df:
+            if var1 != var2:
+                fig, ax = plt.subplots(figsize = figsize)
+                # Create list of years from index
+                # Year will be represented by color
+                if "Year" not in df.keys():
+                    df["Year"] = [int(str(ind)[:4]) for ind in df.index] 
+                df.plot.scatter(x = var1, y = var2, s = s, ax = ax, 
+                                c = "Year", cmap = "viridis")
+                # Turn the text on the x-axis so that it reads vertically
+                ax.tick_params(axis='x', rotation=90)
+                # Get rid of tick lines perpendicular to the axis for aesthetic
+                ax.tick_params('both', length=0, which='both')
+                # save image if PdfPages object was passed
+                if save_fig:
+                    try:
+                        os.mkdir("plots")
+                    except:
+                        pass
+                    plt.savefig("plots/" + str(list(df.keys())).replace("[", "").replace("]","")[:40] + " scatter.png",
+                            bbox_inches = "tight")
+                    if pp != None: pp.savefig(fig, bbox_inches = "tight")
+
+def corr_matrix_heatmap(df, save_fig = False, pp = None):  
+    #Create a figure to visualize a corr matrix  
+    fig, ax = plt.subplots(figsize=(20,20))  
+    # use ax.imshow() to create a heatmap of correlation values  
+    # seismic mapping shows negative values as blue and positive values as red  
+    im = ax.imshow(df, norm = plt.cm.colors.Normalize(-1,1), cmap = "seismic")  
+    # create a list of labels, stacking each word in a label by replacing " "  
+    # with "\n"  
+    labels = df.keys()  
+    num_vars = len(labels)  
+    tick_labels = [lab.replace(" ", "\n") for lab in labels]  
+    # adjust font size according to the number of variables visualized  
+    tick_font_size = 120 / num_vars  
+    val_font_size = 200 / num_vars  
+    plt.rcParams.update({'font.size': tick_font_size}) 
+    # prepare space for label of each column  
+    x_ticks = np.arange(num_vars)  
+    # select labels and rotate them 90 degrees so that they are vertical  
+    plt.xticks(x_ticks, tick_labels, fontsize = tick_font_size, rotation = 90)  
+    # prepare space for label of each row  
+    y_ticks = np.arange(len(labels))  
+    # select labels  
+    plt.yticks(y_ticks, tick_labels, fontsize = tick_font_size)  
+    # show values in each tile of the heatmap  
+    for i in range(len(labels)):  
+        for j in range(len(labels)):  
+            text = ax.text(i, j, str(round(df.values[i][j],2)),  
+                           fontsize= val_font_size, ha="center",   
+                           va="center", color = "w")  
+    #Create title with Times New Roman Font  
+    title_font = {"fontname":"Times New Roman"}  
+    plt.title("Correlation", fontsize = 50, **title_font)  
+    #Call scale to show value of colors 
+    cbar = fig.colorbar(im)
+    plt.show()
+    if save_fig:
+        try:
+            os.mkdir("plots")
+        except:
+            pass
+        plt.savefig("plots/" + str(list(df.keys())).replace("[", "").replace("]","")[:40] + " corrMatrix.png",
+            bbox_inches = "tight")
+
+        if pp != None: pp.savefig(fig, bbox_inches="tight")
+    plt.close()
+
+def plot_stacked_lines(df, plot_vars, linewidth = 1, 
+                       figsize = (40, 20),
+                       pp = None, total_var = False,
+                      title = False):
+    fig, ax = plt.subplots(figsize = figsize)
+    # df.plot.area() created a stacked plot
+    df[plot_vars].plot.area(stacked = True, linewidth = linewidth,
+                            ax = ax)
+    if total_var != False:
+        df[total_var].plot.line(linewidth = linewidth, ax = ax,
+                                c = "k",label = total_var, 
+                                ls = "--")
+    # place legend in top left corner of plot
+    # format legend so that there are two columns of names
+    ax.legend(loc = 2, ncol = 2)
+    if title != False:
+        plt.title(title)

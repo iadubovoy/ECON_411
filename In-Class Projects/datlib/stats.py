@@ -1,181 +1,148 @@
-{
- "cells": [
-  {
-   "cell_type": "code",
-   "execution_count": 1,
-   "id": "19d0d45b",
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "import pandas as pd\n",
-    "def total(list_obj):\n",
-    "    total = 0\n",
-    "    n = len(list_obj)\n",
-    "    for i in range(n):\n",
-    "        total += list_obj[i]\n",
-    "    return total\n",
-    "\n",
-    "def mean(list_obj):\n",
-    "    n = len(list_obj)\n",
-    "    mean_ = total(list_obj) / n\n",
-    "    return mean_\n",
-    "\n",
-    "def median(list_obj):\n",
-    "    n = len(list_obj)\n",
-    "    list_obj = sorted(list_obj)\n",
-    "    #lists of even length divided by 2 have reminder 0\n",
-    "    if n % 2 != 0:\n",
-    "        #list length is odd\n",
-    "        middle_index = int((n - 1) / 2)\n",
-    "        median_ = list_obj[middle_index]\n",
-    "    else:\n",
-    "        upper_middle_index = int(n / 2)\n",
-    "        lower_middle_index = upper_middle_index - 1\n",
-    "        # pass slice with two middle values to mean()\n",
-    "        median_ = mean(list_obj[lower_middle_index : upper_middle_index + 1])\n",
-    "        \n",
-    "    return median_\n",
-    "\n",
-    "def mode(list_obj):\n",
-    "    # use to record value(s) that appear most times\n",
-    "    max_count = 0\n",
-    "    # use to count occurrences of each value in list\n",
-    "    counter_dict = {}\n",
-    "    for value in list_obj:\n",
-    "        # count for each value should start at 0\n",
-    "        counter_dict[value] = 0\n",
-    "    for value in list_obj:\n",
-    "        # add on to the count of the value for each occurrence in list_obj\n",
-    "        counter_dict[value] += 1\n",
-    "    # make a list of the value (not keys) from the dictionary\n",
-    "    count_list = list(counter_dict.values())\n",
-    "    # and find the max value\n",
-    "    max_count = max(count_list)\n",
-    "    # use a generator to make a list of the values (keys) whose number of \n",
-    "    # occurences in the list match max_count\n",
-    "    mode_ = [key for key in counter_dict if counter_dict[key] == max_count]\n",
-    "    \n",
-    "    return mode_\n",
-    "\n",
-    "def variance(list_obj, sample = False):\n",
-    "    # popvar(list) = sum((xi - list_mean)**2) / n for all xi in list\n",
-    "    # save mean value of list\n",
-    "    list_mean = mean(list_obj)\n",
-    "    # use n to calculate average of sum squared diffs\n",
-    "    n = len(list_obj)\n",
-    "    # create value we can add squared diffs to\n",
-    "    sum_sq_diff = 0\n",
-    "    for val in list_obj:\n",
-    "        # adds each squared diff to sum_sq_diff\n",
-    "        sum_sq_diff += (val - list_mean) ** 2\n",
-    "    if sample == False:\n",
-    "        # normalize result by dividing by n\n",
-    "        variance_ = sum_sq_diff / n\n",
-    "    else:\n",
-    "        # for samples, normalize by dividing by (n-1)\n",
-    "        variance_ = sum_sq_diff / (n - 1)\n",
-    "    \n",
-    "    return variance_\n",
-    "\n",
-    "def SD(list_obj, sample = False):\n",
-    "    # Standard deviation is the square root of variance\n",
-    "    SD_ = variance(list_obj, sample) ** (1/2)\n",
-    "    \n",
-    "    return SD_\n",
-    "def covariance(list_obj1, list_obj2, sample = False):\n",
-    "    # determine the mean of each list\n",
-    "    mean1 = mean(list_obj1)\n",
-    "    mean2 = mean(list_obj2)\n",
-    "    # instantiate a variable holding the value of 0; this will be used to \n",
-    "    # sum the values generated in the for loop below\n",
-    "    cov = 0\n",
-    "    n1 = len(list_obj1)\n",
-    "    n2 = len(list_obj2)\n",
-    "    # check list lengths are equal\n",
-    "    if n1 == n2:\n",
-    "        n = n1\n",
-    "        # sum the product of the differences\n",
-    "        for i in range(n1):\n",
-    "            cov += (list_obj1[i] - mean1) * (list_obj2[i] - mean2)\n",
-    "        if sample == False:\n",
-    "            cov = cov / n\n",
-    "        # account for sample by dividing by one less than number of elements in list\n",
-    "        else:\n",
-    "            cov = cov / (n - 1)\n",
-    "        # return covariance\n",
-    "        return cov\n",
-    "    else:\n",
-    "        print(\"List lengths are not equal\")\n",
-    "        print(\"List1:\", n1)\n",
-    "        print(\"List2:\", n2)\n",
-    "    \n",
-    "\n",
-    "def correlation(list_obj1, list_obj2):\n",
-    "    # corr(x,y) = cov(x, y) / (SD(x) * SD(y))\n",
-    "    cov = covariance(list_obj1, list_obj2)\n",
-    "    SD1 = SD(list_obj1)\n",
-    "    SD2 = SD(list_obj2)\n",
-    "    corr = cov / (SD1 * SD2)\n",
-    "    return corr\n",
-    "\n",
-    "def skewness(list_obj, sample = False):\n",
-    "    mean_ = mean(list_obj)\n",
-    "    SD_ = SD(list_obj, sample)\n",
-    "    skew = 0\n",
-    "    n = len(list_obj)\n",
-    "    for val in list_obj:\n",
-    "        skew += (val - mean_) ** 3\n",
-    "        skew = skew / n if not sample else n * skew / ((n - 1)*(n - 1) * SD_ ** 3)\n",
-    "        \n",
-    "    return skew\n",
-    "\n",
-    "def kurtosis(list_obj, sample = False):\n",
-    "    mean_ = mean(list_obj)\n",
-    "    kurt = 0\n",
-    "    SD_ = SD(list_obj, sample)\n",
-    "    n = len(list_obj)\n",
-    "    for x in list_obj:\n",
-    "        kurt += (x - mean_) ** 4\n",
-    "    kurt = kurt / (n * SD_ ** 4) if not sample else  n * (n + 1) * kurt / \\\n",
-    "    ((n - 1) * (n - 2) * (SD_ ** 4)) - (3 *(n - 1) ** 2) / ((n - 2) * (n - 3))\n",
-    "    \n",
-    "    return kurt\n",
-    "def gather_statistics(df, sample = False):\n",
-    "    dct = {key:{} for key in df}\n",
-    "    for key, val in df.items():\n",
-    "        # drop any missing observations from dataframe\n",
-    "        val = val.dropna(axis=0)\n",
-    "        dct[key][\"mean\"] = round(mean(val),3)\n",
-    "        dct[key][\"median\"] = round(median(val),3)\n",
-    "        #skip mode. . .         dct[key][\"mode\"] = mode(val)\n",
-    "        dct[key][\"variance\"] = round(variance(val, sample),3)\n",
-    "        dct[key][\"S.D.\"] = round(SD(val, sample) ,3)\n",
-    "        dct[key][\"skewness\"] = round(skewness(val, sample),3)\n",
-    "        dct[key][\"kurtosis\"] = round(kurtosis(val, sample),3)\n",
-    "    stats_df = pd.DataFrame(dct)  \n",
-    "    return stats_df"
-   ]
-  }
- ],
- "metadata": {
-  "kernelspec": {
-   "display_name": "Python 3",
-   "language": "python",
-   "name": "python3"
-  },
-  "language_info": {
-   "codemirror_mode": {
-    "name": "ipython",
-    "version": 3
-   },
-   "file_extension": ".py",
-   "mimetype": "text/x-python",
-   "name": "python",
-   "nbconvert_exporter": "python",
-   "pygments_lexer": "ipython3",
-   "version": "3.8.8"
-  }
- },
- "nbformat": 4,
- "nbformat_minor": 5
-}
+#stats.py
+import pandas as pd
+def total(list_obj):
+    total = 0
+    n = len(list_obj)
+    for i in range(n):
+        total += list_obj[i]
+    return total
+
+def mean(list_obj):
+    n = len(list_obj)
+    mean_ = total(list_obj) / n
+    return mean_
+
+def median(list_obj):
+    n = len(list_obj)
+    list_obj = sorted(list_obj)
+    #lists of even length divided by 2 have reminder 0
+    if n % 2 != 0:
+        #list length is odd
+        middle_index = int((n - 1) / 2)
+        median_ = list_obj[middle_index]
+    else:
+        upper_middle_index = int(n / 2)
+        lower_middle_index = upper_middle_index - 1
+        # pass slice with two middle values to mean()
+        median_ = mean(list_obj[lower_middle_index : upper_middle_index + 1])
+        
+    return median_
+
+def mode(list_obj):
+    # use to record value(s) that appear most times
+    max_count = 0
+    # use to count occurrences of each value in list
+    counter_dict = {}
+    for value in list_obj:
+        # count for each value should start at 0
+        counter_dict[value] = 0
+    for value in list_obj:
+        # add on to the count of the value for each occurrence in list_obj
+        counter_dict[value] += 1
+    # make a list of the value (not keys) from the dictionary
+    count_list = list(counter_dict.values())
+    # and find the max value
+    max_count = max(count_list)
+    # use a generator to make a list of the values (keys) whose number of 
+    # occurences in the list match max_count
+    mode_ = [key for key in counter_dict if counter_dict[key] == max_count]
+    
+    return mode_
+
+def variance(list_obj, sample = False):
+    # popvar(list) = sum((xi - list_mean)**2) / n for all xi in list
+    # save mean value of list
+    list_mean = mean(list_obj)
+    # use n to calculate average of sum squared diffs
+    n = len(list_obj)
+    # create value we can add squared diffs to
+    sum_sq_diff = 0
+    for val in list_obj:
+        # adds each squared diff to sum_sq_diff
+        sum_sq_diff += (val - list_mean) ** 2
+    if sample == False:
+        # normalize result by dividing by n
+        variance_ = sum_sq_diff / n
+    else:
+        # for samples, normalize by dividing by (n-1)
+        variance_ = sum_sq_diff / (n - 1)
+    
+    return variance_
+
+def SD(list_obj, sample = False):
+    # Standard deviation is the square root of variance
+    SD_ = variance(list_obj, sample) ** (1/2)
+    
+    return SD_
+def covariance(list_obj1, list_obj2, sample = False):
+    # determine the mean of each list
+    mean1 = mean(list_obj1)
+    mean2 = mean(list_obj2)
+    # instantiate a variable holding the value of 0; this will be used to 
+    # sum the values generated in the for loop below
+    cov = 0
+    n1 = len(list_obj1)
+    n2 = len(list_obj2)
+    # check list lengths are equal
+    if n1 == n2:
+        n = n1
+        # sum the product of the differences
+        for i in range(n1):
+            cov += (list_obj1[i] - mean1) * (list_obj2[i] - mean2)
+        if sample == False:
+            cov = cov / n
+        # account for sample by dividing by one less than number of elements in list
+        else:
+            cov = cov / (n - 1)
+        # return covariance
+        return cov
+    else:
+        print("List lengths are not equal")
+        print("List1:", n1)
+        print("List2:", n2)
+    
+
+def correlation(list_obj1, list_obj2):
+    # corr(x,y) = cov(x, y) / (SD(x) * SD(y))
+    cov = covariance(list_obj1, list_obj2)
+    SD1 = SD(list_obj1)
+    SD2 = SD(list_obj2)
+    corr = cov / (SD1 * SD2)
+    return corr
+
+def skewness(list_obj, sample = False):
+    mean_ = mean(list_obj)
+    SD_ = SD(list_obj, sample)
+    skew = 0
+    n = len(list_obj)
+    for val in list_obj:
+        skew += (val - mean_) ** 3
+        skew = skew / n if not sample else n * skew / ((n - 1)*(n - 1) * SD_ ** 3)
+        
+    return skew
+
+def kurtosis(list_obj, sample = False):
+    mean_ = mean(list_obj)
+    kurt = 0
+    SD_ = SD(list_obj, sample)
+    n = len(list_obj)
+    for x in list_obj:
+        kurt += (x - mean_) ** 4
+    kurt = kurt / (n * SD_ ** 4) if not sample else  n * (n + 1) * kurt / \
+    ((n - 1) * (n - 2) * (SD_ ** 4)) - (3 *(n - 1) ** 2) / ((n - 2) * (n - 3))
+    
+    return kurt
+def gather_statistics(df, sample = False):
+    dct = {key:{} for key in df}
+    for key, val in df.items():
+        # drop any missing observations from dataframe
+        val = val.dropna(axis=0)
+        dct[key]["mean"] = round(mean(val),3)
+        dct[key]["median"] = round(median(val),3)
+        #skip mode. . .         dct[key]["mode"] = mode(val)
+        dct[key]["variance"] = round(variance(val, sample),3)
+        dct[key]["S.D."] = round(SD(val, sample) ,3)
+        dct[key]["skewness"] = round(skewness(val, sample),3)
+        dct[key]["kurtosis"] = round(kurtosis(val, sample),3)
+    stats_df = pd.DataFrame(dct)  
+    return stats_df
